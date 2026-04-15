@@ -1,0 +1,96 @@
+# Cline Rules for Password Strength Auditor Project
+
+## Project Context
+This is a **Password Strength Auditor** - a Python-based security tool that evaluates password strength, checks breach status via HaveIBeenPwned API, and generates secure passwords.
+
+## Security-First Development Principles
+- NEVER hardcode passwords, API keys, or secrets in source code
+- Use environment variables (.env files) for all sensitive configuration
+- Follow CIA Triad: Confidentiality, Integrity, Availability
+- Use k-anonymity when querying external APIs (SHA-1 prefix only)
+- Prefer `secrets` module over `random` for cryptographically secure operations
+- Validate and sanitize all user inputs
+
+## Technology Stack
+- **Language**: Python 3.8+
+- **Key Libraries**: 
+  - `requests` for API calls
+  - `zxcvbn` for entropy estimation (Phase 3)
+  - `python-dotenv` for environment management
+  - `hashlib` for SHA-1 hashing
+  - `secrets` for secure random generation
+  - `re` for regex patterns
+- **Testing**: `pytest` with `pytest-cov`
+
+## Architecture Guidelines
+- Single Responsibility Principle: Separate concerns into modules
+  - `password_evaluator.py` - Strength logic
+  - `breach_checker.py` - HaveIBeenPwned integration
+  - `password_generator.py` - Secure generation
+  - `main.py` - CLI interface
+- Use type hints for all function signatures
+- Document all functions with docstrings
+- Handle errors gracefully with try/except blocks
+
+## Code Style
+- Follow PEP 8
+- Use meaningful variable names (no single-letter variables except in loops)
+- Maximum line length: 100 characters
+- Use f-strings for string formatting
+- Import order: stdlib → third-party → local
+
+## API Integration Rules
+- HaveIBeenPwned API uses k-anonymity model:
+  1. Hash password with SHA-1
+  2. Send only first 5 characters of hash
+  3. Check if suffix exists in response
+- Implement retry logic with exponential backoff
+- Set reasonable timeouts (5-10 seconds)
+- Handle rate limits (429 status) appropriately
+
+## Password Strength Criteria
+- Minimum length: 12 characters (configurable)
+- Character diversity: uppercase, lowercase, digits, special characters
+- Entropy calculation using zxcvbn (not just pattern matching)
+- Check against common password lists
+- Provide actionable feedback to users
+
+## Testing Requirements
+- Unit tests for all core functions
+- Mock external API calls in tests
+- Test edge cases: empty input, unicode, very long passwords
+- Aim for 80%+ code coverage
+- Security tests for input validation
+
+## Documentation Standards
+- README.md must include:
+  - Security design choices explanation
+  - Installation instructions
+  - Usage examples
+  - API key setup (without exposing keys)
+- Inline comments for complex security logic
+- Docstrings following Google style
+
+## Git Practices
+- No secrets in git history (use git-secrets or pre-commit hooks)
+- Commit messages should reference phases from PLAN.md
+- Keep commits atomic and focused
+
+## Error Handling
+- Never expose stack traces to end users
+- Log errors for debugging (securely, no passwords in logs)
+- Graceful degradation if APIs are unavailable
+- Validate all external data before processing
+
+## Performance Considerations
+- Password hashing should be fast (SHA-1, not bcrypt/argon2 for this use case)
+- API calls should be async if checking multiple passwords
+- Memory efficient handling of large breach databases
+
+## Compliance Checkpoints
+Before marking any phase complete, verify:
+- [ ] No hardcoded secrets
+- [ ] Input validation implemented
+- [ ] Error handling covers edge cases
+- [ ] Documentation is accurate
+- [ ] Tests pass with good coverage

@@ -1,0 +1,202 @@
+# =============================================================================
+# Password Strength Auditor - Comprehensive .gitignore
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Environment & Secrets - NEVER COMMIT THESE
+# -----------------------------------------------------------------------------
+.env
+.env.local
+.env.*.local
+.env.development
+.env.test
+.env.production
+!.env.example          # Keep the example file
+*.pem
+*.key
+*.crt
+secrets/
+credentials/
+config.local.py
+
+# -----------------------------------------------------------------------------
+# Python Artifacts
+# -----------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+pip-log.txt
+pip-delete-this-directory.txt
+
+# -----------------------------------------------------------------------------
+# Virtual Environments
+# -----------------------------------------------------------------------------
+venv/
+env/
+ENV/
+.venv/
+.env/
+env.bak/
+venv.bak/
+.python-version
+
+# -----------------------------------------------------------------------------
+# Testing & Coverage
+# -----------------------------------------------------------------------------
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+htmlcov/
+*.lcov
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# -----------------------------------------------------------------------------
+# IDE & Editor Files
+# -----------------------------------------------------------------------------
+# VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+.history/
+
+# PyCharm / IntelliJ
+.idea/
+*.iml
+*.iws
+*.ipr
+*.iws
+out/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+.netrwhist
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# -----------------------------------------------------------------------------
+# OS Generated Files
+# -----------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# -----------------------------------------------------------------------------
+# Logs & Databases
+# -----------------------------------------------------------------------------
+*.log
+logs/
+log/
+*.sqlite
+*.sqlite3
+*.db
+
+# -----------------------------------------------------------------------------
+# Project-Specific: Password Strength Auditor
+# -----------------------------------------------------------------------------
+# Generated batch results (may contain sensitive password data)
+batch_results.json
+batch_results.csv
+*.batch-results.*
+
+# Demo/test files that may contain real passwords
+demo_passwords.txt
+passwords.txt
+test_passwords.txt
+*.passwords.txt
+
+# User-specific documentation (contains local paths/system info)
+MANUAL_TESTING_GUIDE.md
+
+# Audit reports (generated files)
+audit_report*.json
+audit_report*.csv
+security_audit_*
+
+# Temporary files during processing
+*.tmp
+*.temp
+*.bak
+*~
+\#*\#
+
+# -----------------------------------------------------------------------------
+# Documentation Build Artifacts
+# -----------------------------------------------------------------------------
+/site
+docs/_build/
+docs/_static/
+docs/_templates/
+*.mo
+
+# -----------------------------------------------------------------------------
+# Package Manager Files
+# -----------------------------------------------------------------------------
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# -----------------------------------------------------------------------------
+# Misc
+# -----------------------------------------------------------------------------
+.sass-cache/
+*.css.map
+*.js.map
+.eslintcache
+.stylelintcache
+.parcel-cache/
+.next/
+.nuxt/
+.cache/
+.temp/
