@@ -144,8 +144,10 @@ class PasswordPolicyConfig(BaseModel):
     def default_ge_min(cls, v, info):
         values = info.data
         if 'min_password_length' in values and v < values['min_password_length']:
-            # Auto-adjust default to match min when min is increased
-            return values['min_password_length']
+            raise ValueError(
+                f"default_password_length ({v}) must be >= "
+                f"min_password_length ({values['min_password_length']})"
+            )
         return v
 
 
@@ -232,6 +234,16 @@ class Config(BaseModel):
     
     # Additional custom settings
     custom: Dict[str, Any] = Field(default_factory=dict)
+    
+    def model_post_init(self, __context):
+        """Validate configuration after initialization."""
+        # Validate password lengths
+        if (self.password_policy.default_password_length < 
+            self.password_policy.min_password_length):
+            raise ValueError(
+                f"default_password_length ({self.password_policy.default_password_length}) "
+                f"must be >= min_password_length ({self.password_policy.min_password_length})"
+            )
     
     # =========================================================================
     # Class Methods for Loading Configuration
@@ -338,15 +350,16 @@ class Config(BaseModel):
         if explicit_path:
             search_paths.append(Path(explicit_path))
         else:
-            # Current directory
+            # Current directory - use Path.cwd() to allow test mocking
+            cwd = Path.cwd()
             search_paths.extend([
-                Path(".password-auditor.yaml"),
-                Path(".password-auditor.yml"),
-                Path(".password-auditor.toml"),
+                cwd / ".password-auditor.yaml",
+                cwd / ".password-auditor.yml",
+                cwd / ".password-auditor.toml",
             ])
             
             # pyproject.toml
-            pyproject = Path("pyproject.toml")
+            pyproject = cwd / "pyproject.toml"
             if pyproject.exists():
                 search_paths.append(pyproject)
             

@@ -112,6 +112,7 @@ class TestConfigLoading:
         """Environment variables should override defaults."""
         with patch.dict(os.environ, {
             "MIN_PASSWORD_LENGTH": "20",
+            "DEFAULT_PASSWORD_LENGTH": "20",
             "HIBP_API_TIMEOUT": "10",
         }):
             config = Config.load()
@@ -120,9 +121,9 @@ class TestConfigLoading:
 
     def test_cli_overrides_highest_priority(self):
         """CLI overrides should have highest priority."""
-        with patch.dict(os.environ, {"MIN_PASSWORD_LENGTH": "15"}):
+        with patch.dict(os.environ, {"MIN_PASSWORD_LENGTH": "15", "DEFAULT_PASSWORD_LENGTH": "15"}):
             config = Config.load(cli_overrides={
-                "password_policy": {"min_password_length": 25}
+                "password_policy": {"min_password_length": 25, "default_password_length": 25}
             })
             assert config.min_password_length == 25
 
@@ -159,6 +160,7 @@ class TestYAMLConfigLoading:
             "profile": "default",
             "password_policy": {
                 "min_password_length": 20,  # Override default's 12
+                "default_password_length": 20,  # Must also be >= min
             },
         }
         yaml_file.write_text(yaml.dump(config_data))
@@ -323,6 +325,7 @@ class TestConfigHierarchy:
             "profile": "enterprise",
             "password_policy": {
                 "min_password_length": 25,  # Override enterprise's 16
+                "default_password_length": 25,  # Must also be >= min
             },
         }))
 
@@ -337,11 +340,12 @@ class TestConfigHierarchy:
         config_file.write_text(yaml.dump({
             "password_policy": {
                 "min_password_length": 20,
+                "default_password_length": 20,
             },
         }))
 
         with patch("pathlib.Path.cwd", return_value=tmp_path):
-            with patch.dict(os.environ, {"MIN_PASSWORD_LENGTH": "30"}):
+            with patch.dict(os.environ, {"MIN_PASSWORD_LENGTH": "30", "DEFAULT_PASSWORD_LENGTH": "30"}):
                 config = Config.load()
                 assert config.min_password_length == 30
 
@@ -351,13 +355,14 @@ class TestConfigHierarchy:
         config_file.write_text(yaml.dump({
             "password_policy": {
                 "min_password_length": 20,
+                "default_password_length": 20,
             },
         }))
 
         with patch("pathlib.Path.cwd", return_value=tmp_path):
-            with patch.dict(os.environ, {"MIN_PASSWORD_LENGTH": "25"}):
+            with patch.dict(os.environ, {"MIN_PASSWORD_LENGTH": "25", "DEFAULT_PASSWORD_LENGTH": "25"}):
                 config = Config.load(cli_overrides={
-                    "password_policy": {"min_password_length": 30}
+                    "password_policy": {"min_password_length": 30, "default_password_length": 30}
                 })
                 assert config.min_password_length == 30
 

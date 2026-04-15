@@ -125,8 +125,14 @@ class PasswordSecurityFilter(logging.Filter):
             return context
         
         redacted = {}
+        import re
         for key, value in context.items():
-            key_normalized = str(key).lower().replace('-', '_').replace(' ', '_')
+            # Normalize key: handle hyphens, spaces, and camelCase
+            key_normalized = str(key).replace('-', '_').replace(' ', '_')
+            # Handle camelCase: secretToken → secret_token, APIKey → api_key
+            key_normalized = re.sub(r'([a-z])([A-Z])', r'\1_\2', key_normalized)
+            # Now lowercase
+            key_normalized = key_normalized.lower()
             
             # Skip safe keys
             if key_normalized in self.SAFE_KEYS:
