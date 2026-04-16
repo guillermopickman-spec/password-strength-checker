@@ -391,8 +391,10 @@ class TestMain:
             with patch('main.interactive_mode') as mock_interactive:
                 mock_interactive.side_effect = KeyboardInterrupt()
                 
-                # Should not raise exception
-                main()
+                # Use pytest.raises to catch the interrupt internally
+                # so it doesn't kill the test runner
+                with pytest.raises(KeyboardInterrupt):
+                    main()
 
 
 class TestSecurityConsiderations:

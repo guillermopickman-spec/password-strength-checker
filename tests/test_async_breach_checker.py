@@ -24,6 +24,19 @@ from breach_checker import (
 )
 
 
+class AsyncContextManagerMock:
+    """Helper class to mock async context managers properly."""
+    
+    def __init__(self, response):
+        self._response = response
+    
+    async def __aenter__(self):
+        return self._response
+    
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        return None
+
+
 class TestCheckPwnedAsync:
     """Tests for check_pwned_async function."""
 
@@ -34,16 +47,15 @@ class TestCheckPwnedAsync:
         test_prefix = "ABC12"
         test_password = "testpassword123"
         
-        # Mock the session and response
-        mock_response = AsyncMock()
+        # Mock the response object
+        mock_response = Mock()
         mock_response.status = 200
         mock_response.text = AsyncMock(return_value=f"{test_hash_suffix}:150")
         mock_response.raise_for_status = Mock()
-        mock_response.__aenter__ = AsyncMock(return_value=mock_response)
-        mock_response.__aexit__ = AsyncMock(return_value=None)
         
-        mock_session = AsyncMock()
-        mock_session.get = Mock(return_value=mock_response)
+        # Create mock session with a side_effect function that returns context manager
+        mock_session = Mock()
+        mock_session.get.side_effect = lambda *args, **kwargs: AsyncContextManagerMock(mock_response)
         
         # Mock hashlib.sha1
         with patch('breach_checker.hashlib.sha1') as mock_sha1:
@@ -58,15 +70,14 @@ class TestCheckPwnedAsync:
     @pytest.mark.asyncio
     async def test_clean_password_returns_zero(self):
         """Non-breached password should return 0."""
-        mock_response = AsyncMock()
+        mock_response = Mock()
         mock_response.status = 200
         mock_response.text = AsyncMock(return_value="SOMERANDOMHASH:5\nANOTHERHASH:10")
         mock_response.raise_for_status = Mock()
-        mock_response.__aenter__ = AsyncMock(return_value=mock_response)
-        mock_response.__aexit__ = AsyncMock(return_value=None)
         
-        mock_session = AsyncMock()
-        mock_session.get = Mock(return_value=mock_response)
+        # Create mock session with a side_effect function that returns context manager
+        mock_session = Mock()
+        mock_session.get.side_effect = lambda *args, **kwargs: AsyncContextManagerMock(mock_response)
         
         with patch('breach_checker.hashlib.sha1') as mock_sha1:
             mock_hash = Mock()
@@ -82,12 +93,13 @@ class TestCheckPwnedAsync:
         """API should be called with first 5 chars of SHA-1 hash."""
         password = "testpassword"
         
-        mock_response = AsyncMock()
+        mock_response = Mock()
         mock_response.text = AsyncMock(return_value="")
         mock_response.raise_for_status = Mock()
         
-        mock_session = AsyncMock()
-        mock_session.get = AsyncMock(return_value=mock_response)
+        # Create mock session with a side_effect function that returns context manager
+        mock_session = Mock()
+        mock_session.get.side_effect = lambda *args, **kwargs: AsyncContextManagerMock(mock_response)
         
         await check_pwned_async(password, mock_session)
         
@@ -99,8 +111,16 @@ class TestCheckPwnedAsync:
     @pytest.mark.asyncio
     async def test_timeout_returns_none(self):
         """Timeout should return None (not raise exception)."""
-        mock_session = AsyncMock()
-        mock_session.get = AsyncMock(side_effect=asyncio.TimeoutError())
+        class AsyncContextManagerRaiseTimeout:
+            """Async context manager that raises timeout on enter."""
+            async def __aenter__(self):
+                raise asyncio.TimeoutError()
+            
+            async def __aexit__(self, exc_type, exc_val, exc_tb):
+                return None
+
+        mock_session = Mock()
+        mock_session.get.side_effect = lambda *args, **kwargs: AsyncContextManagerRaiseTimeout()
         
         with patch('breach_checker.hashlib.sha1') as mock_sha1:
             mock_hash = Mock()
@@ -114,8 +134,16 @@ class TestCheckPwnedAsync:
     @pytest.mark.asyncio
     async def test_client_error_returns_none(self):
         """Client error should return None."""
-        mock_session = AsyncMock()
-        mock_session.get = AsyncMock(side_effect=aiohttp.ClientError("Connection error"))
+        class AsyncContextManagerRaiseClientError:
+            """Async context manager that raises client error on enter."""
+            async def __aenter__(self):
+                raise aiohttp.ClientError("Connection error")
+            
+            async def __aexit__(self, exc_type, exc_val, exc_tb):
+                return None
+
+        mock_session = Mock()
+        mock_session.get.side_effect = lambda *args, **kwargs: AsyncContextManagerRaiseClientError()
         
         with patch('breach_checker.hashlib.sha1') as mock_sha1:
             mock_hash = Mock()
@@ -129,8 +157,16 @@ class TestCheckPwnedAsync:
     @pytest.mark.asyncio
     async def test_general_exception_returns_none(self):
         """Unexpected exceptions should return None."""
-        mock_session = AsyncMock()
-        mock_session.get = AsyncMock(side_effect=Exception("Unexpected error"))
+        class AsyncContextManagerRaiseException:
+            """Async context manager that raises exception on enter."""
+            async def __aenter__(self):
+                raise Exception("Unexpected error")
+            
+            async def __aexit__(self, exc_type, exc_val, exc_tb):
+                return None
+
+        mock_session = Mock()
+        mock_session.get.side_effect = lambda *args, **kwargs: AsyncContextManagerRaiseException()
         
         with patch('breach_checker.hashlib.sha1') as mock_sha1:
             mock_hash = Mock()
@@ -144,12 +180,13 @@ class TestCheckPwnedAsync:
     @pytest.mark.asyncio
     async def test_session_reuse(self):
         """Same session should be reused for multiple calls."""
-        mock_response = AsyncMock()
+        mock_response = Mock()
         mock_response.text = AsyncMock(return_value="")
         mock_response.raise_for_status = Mock()
         
-        mock_session = AsyncMock()
-        mock_session.get = AsyncMock(return_value=mock_response)
+        # Create mock session with a side_effect function that returns context manager
+        mock_session = Mock()
+        mock_session.get.side_effect = lambda *args, **kwargs: AsyncContextManagerMock(mock_response)
         
         with patch('breach_checker.hashlib.sha1') as mock_sha1:
             mock_hash = Mock()
@@ -380,12 +417,13 @@ class TestKAnonymityAsync:
         prefix = full_hash[:5]
         suffix = full_hash[5:]
         
-        mock_response = AsyncMock()
+        mock_response = Mock()
         mock_response.text = AsyncMock(return_value="")
         mock_response.raise_for_status = Mock()
         
-        mock_session = AsyncMock()
-        mock_session.get = AsyncMock(return_value=mock_response)
+        # Create mock session with a side_effect function that returns context manager
+        mock_session = Mock()
+        mock_session.get.side_effect = lambda *args, **kwargs: AsyncContextManagerMock(mock_response)
         
         await check_pwned_async(password, mock_session)
         
@@ -405,8 +443,16 @@ class TestAsyncSecurity:
         """Password should not appear in logs on async error."""
         import logging
         
-        mock_session = AsyncMock()
-        mock_session.get = AsyncMock(side_effect=aiohttp.ClientError("Connection failed"))
+        class AsyncContextManagerRaiseClientError:
+            """Async context manager that raises client error on enter."""
+            async def __aenter__(self):
+                raise aiohttp.ClientError("Connection failed")
+            
+            async def __aexit__(self, exc_type, exc_val, exc_tb):
+                return None
+
+        mock_session = Mock()
+        mock_session.get.side_effect = lambda *args, **kwargs: AsyncContextManagerRaiseClientError()
         
         with caplog.at_level(logging.ERROR):
             with patch('breach_checker.hashlib.sha1') as mock_sha1:
@@ -450,23 +496,23 @@ class TestPerformanceCharacteristics:
         # Use time.perf_counter for more accurate timing
         import time
         
+        # Only patch the network call, NOT the sleep - let asyncio.sleep actually execute
         with patch('breach_checker.check_pwned_async', side_effect=mock_check_with_delay):
-            with patch('breach_checker.asyncio.sleep'):
-                # Time with concurrency of 10
-                start = time.perf_counter()
-                await check_pwned_batch(passwords, max_concurrent=10)
-                time_concurrent = time.perf_counter() - start
+            # Time with concurrency of 10
+            start = time.perf_counter()
+            await check_pwned_batch(passwords, max_concurrent=10)
+            time_concurrent = time.perf_counter() - start
         
         with patch('breach_checker.check_pwned_async', side_effect=mock_check_with_delay):
-            with patch('breach_checker.asyncio.sleep'):
-                # Time with concurrency of 1 (sequential)
-                start = time.perf_counter()
-                await check_pwned_batch(passwords, max_concurrent=1)
-                time_sequential = time.perf_counter() - start
+            # Time with concurrency of 1 (sequential)
+            start = time.perf_counter()
+            await check_pwned_batch(passwords, max_concurrent=1)
+            time_sequential = time.perf_counter() - start
         
-        # Concurrent should be faster (or at least not significantly slower)
-        # Allow some tolerance for timing variations
-        assert time_concurrent <= time_sequential * 1.5, \
+        # With real delays executing:
+        # - Concurrent (10 at once) should take ~0.05s
+        # - Sequential (1 at a time) should take ~0.5s (10 * 0.05s)
+        assert time_concurrent < time_sequential, \
             f"Concurrent ({time_concurrent:.3f}s) should be faster than sequential ({time_sequential:.3f}s)"
 
 
