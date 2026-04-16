@@ -6,7 +6,7 @@ A comprehensive Python-based security tool that evaluates password strength, che
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Security](https://img.shields.io/badge/security-first-red.svg)]()
 [![Python Tests](https://github.com/guillermopickman-spec/password-strength-checker/actions/workflows/python-tests.yml/badge.svg)](https://github.com/guillermopickman-spec/password-strength-checker/actions/workflows/python-tests.yml)
-[![Coverage](https://img.shields.io/badge/coverage-96%25-brightgreen.svg)]()
+[![codecov](https://codecov.io/github/guillermopickman-spec/password-strength-checker/graph/badge.svg?token=IZZ99L59IE)](https://codecov.io/github/guillermopickman-spec/password-strength-checker)
 
 ---
 
